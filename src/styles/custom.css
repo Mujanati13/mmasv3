@@ -1,0 +1,36 @@
+/* General dark mode styles */
+.dark-mode {
+    background-color: #011c40;
+    color: #fff;
+  }
+  
+  /* Ant Design Table Dark Mode Styling */
+  .ant-table-dark .ant-table-thead > tr > th {
+    background-color: #011c40;
+    color: #fff;
+  }
+
+  /* Styling for the Ant Design table row hover effect */
+.hoverable-row {
+  color: black;  
+}
+
+  
+  .ant-table-dark .ant-table-tbody > tr > td {
+    background-color: #011c40;
+    color: #fff;
+  }
+  
+  .ant-table-dark .ant-pagination-item {
+    background-color: #2d2d2d;
+    color: #fff;
+  }
+  
+  .ant-table-dark .ant-pagination-item-active {
+    border-color: #1890ff;
+  }
+  
+  .ant-table-dark .ant-table-row:hover {
+    background-color: #444;
+  }
+  
