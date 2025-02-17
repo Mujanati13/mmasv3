@@ -131,7 +131,7 @@ const TableCours = ({ darkmode }) => {
       });
       if (response.ok) {
         const res = await response.json();
-        if (res == "Added Successfully!!") {
+        if (res.msg == "Added Successfully!!") {
           message.success("Cour ajoutée avec succès");
           setAdd(Math.random() * 1000);
           const id_staff = JSON.parse(localStorage.getItem("data"));
@@ -144,7 +144,7 @@ const TableCours = ({ darkmode }) => {
           );
           onCloseR();
         } else {
-          message.warning(res.msg);
+          message.warning("Cour non ajoutée");
           console.log(res);
         }
       } else {

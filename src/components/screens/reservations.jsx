@@ -1434,6 +1434,7 @@ const TableReservation = ({darkmode}) => {
               <WeekView
                 startDayHour={9}
                 endDayHour={17}
+                excludedDays={[0]} // Exclude Saturday and Sunday
                 timeTableCellComponent={(props) => (
                   <WeekView.TimeTableCell
                     {...props}

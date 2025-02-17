@@ -31,29 +31,29 @@ function DashboardInterface({ darkmode }) {
       }}
     >
       <div className="w-full ">
-        <div className="p-5 flex items-start justify-between">
+        <div className="p-2 flex items-start justify-between">
           <Teresorerie darkmode={false}/>
           <Client darkmode={false}/>
           <Reservations darkmode={false}/>
         </div>
-        <div className="pl-5  pr-5 mt-0 flex items-start justify-between">
+        <div className="pl-1  pr-5 mt-0 flex items-start justify-between">
           <div className="w-[45%] h-96">
             <TypeContart darkmode={false}/>
           </div>
           <Birthday darkmode={false}/>
         </div>
-        <div className="p-5 flex items-start justify-between">
+        <div className="p-1 flex items-start justify-between mt-5">
           <SalaryContractChart darkmode={false}/>
           <div className="w-10"></div>
           <StudentGradeDistribution darkmode={false}/>
         </div>
-        <div className="w-full p-5 flex flex-col space-y-2 items-start justify-between">
+        <div className="w-full p-1 flex flex-col space-y-2 items-start justify-between">
           <div className="flex w-full">
             <ContratsType darkmode={false}/>
             <div className="w-5"></div>
             <CourseDistribution darkmode={false}/>
           </div>
-          <div style={{height:"50px"}} className="w-full mt-5">
+          <div style={{height:"50px"}} className="w-full mt-2">
             <DailyActivityChart />
           </div>
         </div>

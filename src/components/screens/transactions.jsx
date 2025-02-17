@@ -108,14 +108,6 @@ const TableTransication = ({ darkmode }) => {
         allData = [...allData, ...abonnementData];
       }
 
-      // if (exportFilters.depenses) {
-      //   const depenseData = await fetchDataFromAPI(
-      //     "https://JyssrMMAS.pythonanywhere.com/api/transaction_depense/"
-      //   );
-      //   allData = [...allData, ...depenseData];
-      // }
-
-      // Filter data based on date range
       const filteredData = allData.filter((item) => {
         const itemDate = new Date(item.date);
         return (
@@ -763,7 +755,7 @@ const TableTransication = ({ darkmode }) => {
   const handleAdd = async () => {
     transactionData.mode_reglement = transactionData.Mode_reglement;
 
-    const idadmin = await JSON.parse(localStorage.getItem("data"))[0].id_admin;
+    const idadmin = await JSON.parse(localStorage.getItem("data"))[0].id_employe;
 
     try {
       let url;

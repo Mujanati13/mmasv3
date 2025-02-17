@@ -44,6 +44,7 @@ const StudentGradeDistribution = ({ darkmode }) => {
     data,
     xField: "grade",
     yField: "count",
+    
     label: {
       position: "middle",
       style: {
