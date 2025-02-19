@@ -61,6 +61,9 @@ const TableAffiliation = ({ darkmode }) => {
       const processedData = jsonData.data.map((item) => ({
         ...item,
         key: item.id_affiliation,
+        etudiant: item.etudiant ? item.etudiant.replace('/', ' ') : '',
+        parent: item.parent ? item.parent.replace('/', ' ') : ''  
+        
       }));
       setData(processedData);
       setFilteredData(processedData);
@@ -260,11 +263,14 @@ const TableAffiliation = ({ darkmode }) => {
   const handleBulkDelete = async () => {
     try {
       for (const key of selectedRowKeys) {
-        await fetch(`${Endpoint()}/api/affiliation/${key}/`, {
+        await fetch(`${Endpoint()}/api/affiliation/${key}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
+          body: JSON.stringify({
+            id_affiliation: key,
+          }),
         });
       }
       message.success("Selected affiliations deleted successfully");
@@ -289,24 +295,13 @@ const TableAffiliation = ({ darkmode }) => {
         }}
       >
         <div className="flex items-center justify-between mt-3 w-full">
-          <div className="w-52">
+          <div className="w-96 flex items-center space-x-5">
             <Input
               prefix={<SearchOutlined />}
               placeholder="Rechercher une affiliation"
               value={searchText}
               onChange={handleSearch}
             />
-          </div>
-          <div className="flex items-center space-x-2">
-            {JSON.parse(localStorage.getItem(`data`))[0].fonction ==
-              "Administration" &&
-              (true ? (
-                <Button onClick={showDrawer} icon={<UserAddOutlined />}>
-                  Ajouter une affiliation
-                </Button>
-              ) : (
-                ""
-              ))}
             {selectedRowKeys.length > 0 && (
               <>
                 <Popconfirm
@@ -349,6 +344,17 @@ const TableAffiliation = ({ darkmode }) => {
                 )}
               </>
             )}
+          </div>
+          <div className="flex items-center space-x-2">
+            {JSON.parse(localStorage.getItem(`data`))[0].fonction ==
+              "Administration" &&
+              (true ? (
+                <Button onClick={showDrawer} icon={<UserAddOutlined />}>
+                  Ajouter une affiliation
+                </Button>
+              ) : (
+                ""
+              ))}
           </div>
         </div>
         <Table
@@ -476,7 +482,7 @@ const TableAffiliation = ({ darkmode }) => {
           <Space>
             <Button onClick={onClose}>Annuler</Button>
             <Button onClick={handleAffiliationSubmit} type="primary">
-              Soumettre
+              Enregistrer
             </Button>
           </Space>
         </Drawer>

@@ -76,7 +76,7 @@ const TableSalle = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(Endpoint()+"api/category/", {
+        const response = await fetch(Endpoint() + "api/category/", {
           headers: {
             Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
           },
@@ -97,14 +97,11 @@ const TableSalle = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          Endpoint()+"api/contratstaff/",
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
-            },
-          }
-        );
+        const response = await fetch(Endpoint() + "api/contratstaff/", {
+          headers: {
+            Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
+          },
+        });
         const jsonData = await response.json();
         setcontarctStaff(jsonData.data);
       } catch (error) {
@@ -131,7 +128,7 @@ const TableSalle = ({ darkmode }) => {
       //     return;
       //   }
 
-      const response = await fetch(Endpoint()+"api/salles/", {
+      const response = await fetch(Endpoint() + "api/salles/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -178,7 +175,7 @@ const TableSalle = ({ darkmode }) => {
 
   const addCtegeries = async () => {
     try {
-      const response = await fetch(Endpoint()+"api/category/", {
+      const response = await fetch(Endpoint() + "api/category/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -251,7 +248,7 @@ const TableSalle = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(Endpoint()+"api/salles/", {
+        const response = await fetch(Endpoint() + "api/salles/", {
           headers: {
             Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
           },
@@ -315,7 +312,7 @@ const TableSalle = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(Endpoint()+"api/category/ ", {
+        const response = await fetch(Endpoint() + "api/category/ ", {
           headers: {
             Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
           },
@@ -334,7 +331,10 @@ const TableSalle = ({ darkmode }) => {
         // Generate columns based on the desired keys
         const desiredKeys = ["nom_category"];
         const generatedColumns = desiredKeys.map((key) => ({
-          title: capitalizeFirstLetter(key.replace(/\_/g, " ")), // Capitalize the first letter
+          title:
+            {
+              nom_category: "Nom de catégorie", // Changed to French
+            }[key] || capitalizeFirstLetter(key.replace(/\_/g, " ")),
           dataIndex: key,
           key,
           render: (text, record) => {
@@ -781,7 +781,7 @@ const TableSalle = ({ darkmode }) => {
               {/* )} */}
             </div>
             <Drawer
-              title="Saisir un nouveau salle"
+              title="Ajouter une nouvelle salle"
               width={720}
               onClose={onCloseR}
               closeIcon={false}
@@ -872,7 +872,7 @@ const TableSalle = ({ darkmode }) => {
               </div>
             </Drawer>
             <Drawer
-              title="Saisir un nouveau categorie"
+              title="Ajouter une nouvelle catégorie"
               width={720}
               onClose={onCloseC}
               closeIcon={false}
@@ -978,7 +978,7 @@ const TableSalle = ({ darkmode }) => {
           onOk={handleModalSubmit}
           onCancel={handleModalCancel}
           okButtonProps={{ disabled: !isFormChanged }}
-          okText="Soumettre"
+          okText="Enregistrer"
           cancelText="Annuler"
         >
           <div className="h-96 overflow-y-auto">

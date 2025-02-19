@@ -146,14 +146,11 @@ const TableAbonnement = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          Endpoint()+"/api/category_contrat/",
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
-            },
-          }
-        );
+        const response = await fetch(Endpoint() + "/api/category_contrat/", {
+          headers: {
+            Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
+          },
+        });
         const jsonData = await response.json();
         const options = jsonData.data.map((cat) => {
           return {
@@ -184,17 +181,14 @@ const TableAbonnement = ({ darkmode }) => {
   const addClient = async () => {
     if (isRoomFormValid()) {
       try {
-        const response = await fetch(
-          Endpoint()+"/api/abonnement/",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
-            },
-            body: JSON.stringify(ClientData),
-          }
-        );
+        const response = await fetch(Endpoint() + "/api/abonnement/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
+          },
+          body: JSON.stringify(ClientData),
+        });
         if (response.ok) {
           const res = await response.json();
           if (res == "Added Successfully!!") {
@@ -245,17 +239,14 @@ const TableAbonnement = ({ darkmode }) => {
       );
     }
     try {
-      const response = await fetch(
-        Endpoint()+"/api/category_contrat/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
-          },
-          body: JSON.stringify(CategoireData),
-        }
-      );
+      const response = await fetch(Endpoint() + "/api/category_contrat/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
+        },
+        body: JSON.stringify(CategoireData),
+      });
       if (response.ok) {
         const res = await response.json();
         if (res.msg == "Added Successfully!!") {
@@ -316,14 +307,11 @@ const TableAbonnement = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          Endpoint()+"/api/abonnement/",
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
-        );
+        const response = await fetch(Endpoint() + "/api/abonnement/", {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -379,7 +367,7 @@ const TableAbonnement = ({ darkmode }) => {
   // Helper function to get column titles
   const getColumnTitle = (key) => {
     const titles = {
-      type_abonnement: "Type d'abonnement",
+      type_abonnement: "Offert d'abonnement",
       tarif: "Tarif",
       namecat_conrat: "Catégorie de contrat",
       duree_mois: "Durée",
@@ -395,14 +383,11 @@ const TableAbonnement = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          Endpoint()+"/api/category_contrat/",
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
-            },
-          }
-        );
+        const response = await fetch(Endpoint() + "/api/category_contrat/", {
+          headers: {
+            Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
+          },
+        });
         const jsonData = await response.json();
 
         // Ensure each row has a unique key
@@ -574,20 +559,17 @@ const TableAbonnement = ({ darkmode }) => {
     try {
       const values = await form1.validateFields();
       console.log(values);
-      const response = await fetch(
-        `${Endpoint()}api/category_contrat/`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({
-            ...values,
-            id_categoryContrat: editingClient.id_cat_cont,
-          }),
-        }
-      );
+      const response = await fetch(`${Endpoint()}api/category_contrat/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          ...values,
+          id_categoryContrat: editingClient.id_cat_cont,
+        }),
+      });
 
       if (response.ok) {
         const updatedClient = await response.json();
@@ -889,7 +871,7 @@ const TableAbonnement = ({ darkmode }) => {
                   <div className="">
                     <div className="grid grid-cols-2 gap-4 mt-5">
                       <div>
-                        <div>*offre</div>
+                        <div>*Type de l’offre </div>
                         <Input
                           value={ClientData.type_abonnement}
                           onChange={(value) =>
@@ -951,7 +933,7 @@ const TableAbonnement = ({ darkmode }) => {
                         />
                       </div>
                       <div>
-                        <div>*Systéme</div>
+                        <div>*Système académique</div>
                         <Input
                           value={ClientData.Systeme}
                           onChange={(value) =>
@@ -960,7 +942,7 @@ const TableAbonnement = ({ darkmode }) => {
                               Systeme: value.target.value,
                             })
                           }
-                          placeholder="Systéme "
+                          placeholder="Système académique"
                         ></Input>
                       </div>
                       <div>
@@ -1161,7 +1143,7 @@ const TableAbonnement = ({ darkmode }) => {
           onOk={handleModalSubmit}
           onCancel={handleModalCancel}
           okButtonProps={{ disabled: !isFormChanged }}
-          okText="Soumettre"
+          okText="Enregistrer"
           cancelText="Annuler"
         >
           <div className="h-96 overflow-y-auto">

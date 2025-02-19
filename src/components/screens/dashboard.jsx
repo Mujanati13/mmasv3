@@ -44,7 +44,7 @@ function DashboardInterface({ darkmode }) {
         </div>
         <div className="p-1 flex items-start justify-between mt-5">
           <SalaryContractChart darkmode={false}/>
-          <div className="w-10"></div>
+          <div className="w-4"></div>
           <StudentGradeDistribution darkmode={false}/>
         </div>
         <div className="w-full p-1 flex flex-col space-y-2 items-start justify-between">

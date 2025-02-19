@@ -103,7 +103,7 @@ const TableTransication = ({ darkmode }) => {
 
       if (exportFilters.abonnements) {
         const abonnementData = await fetchDataFromAPI(
-          Endpoint()+"api/transactions/"
+          Endpoint() + "api/transactions/"
         );
         allData = [...allData, ...abonnementData];
       }
@@ -271,7 +271,7 @@ const TableTransication = ({ darkmode }) => {
 
   const fetchFournisseurs = async () => {
     try {
-      const response = await fetch(Endpoint()+"api/fournisseur/", {
+      const response = await fetch(Endpoint() + "api/fournisseur/", {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
@@ -289,14 +289,11 @@ const TableTransication = ({ darkmode }) => {
 
   const fetchReservations = async () => {
     try {
-      const response = await fetch(
-        Endpoint()+"api/reservationService/",
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+      const response = await fetch(Endpoint() + "api/reservationService/", {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch reservations");
       }
@@ -333,7 +330,7 @@ const TableTransication = ({ darkmode }) => {
     const fecthConn = async () => {
       try {
         const response = await fetch(
-          Endpoint()+"api/contrat/?client_id=" + idClient,
+          Endpoint() + "api/contrat/?client_id=" + idClient,
           {
             method: "GET",
             headers: {
@@ -382,7 +379,7 @@ const TableTransication = ({ darkmode }) => {
           //     "https://JyssrMMAS.pythonanywhere.com/api/transaction_depense/";
           //   break;
           default:
-            url = Endpoint()+"api/transactions/";
+            url = Endpoint() + "api/transactions/";
         }
 
         const response = await fetch(url, {
@@ -615,14 +612,8 @@ const TableTransication = ({ darkmode }) => {
     try {
       let url;
       switch (transactionType) {
-        // case "service":
-        //   url = "https://JyssrMMAS.pythonanywhere.com/api/transaction_service/";
-        //   break;
-        // case "depense":
-        //   url = "https://JyssrMMAS.pythonanywhere.com/api/transaction_depense/";
-        //   break;
         default:
-          url = Endpoint()+"api/transactions/";
+          url = Endpoint() + "api/transactions/";
       }
 
       const response = await fetch(url, {
@@ -698,9 +689,7 @@ const TableTransication = ({ darkmode }) => {
 
   const fetchClients = async () => {
     try {
-      const response = await fetch(
-        Endpoint()+"api/client_contrat/"
-      );
+      const response = await fetch(Endpoint() + "api/client_contrat/");
       const data = await response.json();
       setContractClients(data.data);
       const seenClients = new Set();
@@ -720,7 +709,7 @@ const TableTransication = ({ darkmode }) => {
 
   const fetchClients2 = async () => {
     try {
-      const response = await fetch(Endpoint()+"api/etudiants/");
+      const response = await fetch(Endpoint() + "api/etudiants/");
       const data = await response.json();
 
       setClients2(data.data);
@@ -731,7 +720,7 @@ const TableTransication = ({ darkmode }) => {
 
   const fetchServices = async () => {
     try {
-      const response = await fetch(Endpoint()+"api/service/");
+      const response = await fetch(Endpoint() + "api/service/");
       const data = await response.json();
       console.log("services:" + data.data);
 
@@ -755,12 +744,13 @@ const TableTransication = ({ darkmode }) => {
   const handleAdd = async () => {
     transactionData.mode_reglement = transactionData.Mode_reglement;
 
-    const idadmin = await JSON.parse(localStorage.getItem("data"))[0].id_employe;
+    const idadmin = await JSON.parse(localStorage.getItem("data"))[0]
+      .id_employe;
 
     try {
       let url;
 
-      url = Endpoint()+"api/transactions/";
+      url = Endpoint() + "api/transactions/";
 
       const discountedAmount =
         transactionData.montant -
@@ -933,19 +923,21 @@ const TableTransication = ({ darkmode }) => {
           onOk={handleExportModalOk}
           onCancel={handleExportModalCancel}
         >
-          <Form layout="vertical">
-            <Form.Item label="Date Range">
-              <DatePicker.RangePicker
-                onChange={(dates) => {
-                  setExportFilters({
-                    ...exportFilters,
-                    dateStart: dates ? dates[0].toDate() : null,
-                    dateEnd: dates ? dates[1].toDate() : null,
-                  });
-                }}
-              />
-            </Form.Item>
-          </Form>
+          <Form.Item label="Date Range">
+            <DatePicker.RangePicker
+              onChange={(dates) => {
+                setExportFilters({
+                  ...exportFilters,
+                  dateStart: dates ? dates[0].toDate() : null,
+                  dateEnd: dates ? dates[1].toDate() : null,
+                });
+              }}
+              picker="date"
+              mode={["date", "date"]}
+              style={{ width: "100%" }}
+              panelRender={(panel) => <div style={{ width: 280 }}>{panel}</div>}
+            />
+          </Form.Item>
         </Modal>
 
         <TransactionDetailsModal
@@ -1541,10 +1533,6 @@ const TableTransication = ({ darkmode }) => {
           className="w-full mt-5"
           columns={columns}
           dataSource={filteredData}
-          rowSelection={{
-            selectedRowKeys,
-            onChange: (selectedRowKeys) => setSelectedRowKeys(selectedRowKeys),
-          }}
         />
       </div>
     </ConfigProvider>

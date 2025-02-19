@@ -27,18 +27,13 @@ import {
   Switch,
 } from "antd";
 import "dayjs/locale/fr"; // Import French locale for Day.js
-import {
-  formatDateToYearMonthDay,
-  getCurrentDate,
-} from "../../utils/helper";
+import { formatDateToYearMonthDay, getCurrentDate } from "../../utils/helper";
 import { Endpoint } from "../../utils/endpoint";
 const { RangePicker } = DatePicker;
 
 const fetchReservations = async () => {
   try {
-    const response = await fetch(
-      Endpoint()+"api/reservation/"
-    );
+    const response = await fetch(Endpoint() + "api/reservation/");
     const data = await response.json();
     return data.data;
   } catch (error) {
@@ -70,21 +65,23 @@ export const TableReservationCoachs = () => {
     id_etd: null,
     id_seance: null,
     date_operation: getCurrentDate(),
-   
- 
   });
 
   const updateLocalState = (clientId, isPresent, absenceReason = "") => {
-    setClientPresence(prev => ({ ...prev, [clientId]: isPresent }));
-    setevent(prev =>
-      prev.map(item =>
+    setClientPresence((prev) => ({ ...prev, [clientId]: isPresent }));
+    setevent((prev) =>
+      prev.map((item) =>
         item.key === clientId
-          ? { ...item, presence: isPresent, absenceReason: isPresent ? "" : absenceReason }
+          ? {
+              ...item,
+              presence: isPresent,
+              absenceReason: isPresent ? "" : absenceReason,
+            }
           : item
       )
     );
   };
-  
+
   const handlePresenceChange = async (checked, clientId) => {
     if (!checked) {
       setSelectedAbsentClient(clientId);
@@ -111,28 +108,25 @@ export const TableReservationCoachs = () => {
   ) => {
     console.log(SeancInfos);
     try {
-      const response = await fetch(
-        Endpoint()+"api/set_presence",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-          },
-          body: JSON.stringify({
-            id_etd: clientId,
-            id_seance: SeancInfos.id_seance,
-            cours: SeancInfos.title,
-            heure_debut: SeancInfos.datestart,
-            heure_fin: SeancInfos.dateend,
-            coach:SeancInfos.coach,
-            date_presence: formatDateToYearMonthDay(SeancInfos.start),
-            status: 1,
-            presence: isPresent,
-            motif_annulation: absenceReason,
-          }),
-        }
-      );
+      const response = await fetch(Endpoint() + "api/set_presence", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+        },
+        body: JSON.stringify({
+          id_etd: clientId,
+          id_seance: SeancInfos.id_seance,
+          cours: SeancInfos.title,
+          heure_debut: SeancInfos.datestart,
+          heure_fin: SeancInfos.dateend,
+          coach: SeancInfos.coach,
+          date_presence: formatDateToYearMonthDay(SeancInfos.start),
+          status: 1,
+          presence: isPresent,
+          motif_annulation: absenceReason,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update presence");
@@ -147,9 +141,7 @@ export const TableReservationCoachs = () => {
   };
   const fetchClients = async () => {
     try {
-      const response = await fetch(
-        Endpoint()+"api/etudiants/"
-      );
+      const response = await fetch(Endpoint() + "api/etudiants/");
       const data = await response.json();
       setClients(data.data);
     } catch (error) {
@@ -160,14 +152,11 @@ export const TableReservationCoachs = () => {
     const authToken = localStorage.getItem("jwtToken"); // Replace with your actual auth token
 
     try {
-      const response = await fetch(
-        Endpoint()+"api/cours/",
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
-          },
-        }
-      );
+      const response = await fetch(Endpoint() + "api/cours/", {
+        headers: {
+          Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
+        },
+      });
       const data = await response.json();
       setCour(data.data);
     } catch (error) {
@@ -199,23 +188,64 @@ export const TableReservationCoachs = () => {
 
   const transformReservations = (reservations) => {
     return reservations.map((reservation) => {
-      // Extract date and time components
-      const dateParts = reservation.date_reservation.split('T')[0];
-      const startDateTime = new Date(`${dateParts}T${reservation.heur_debut}`);
-      const endDateTime = new Date(`${dateParts}T${reservation.heure_fin}`);
-  
+      // Get current week's date for the specified day
+      const getDayDate = (dayName) => {
+        const days = {
+          Lundi: 1,
+          Mardi: 2,
+          Mercredi: 3,
+          Jeudi: 4,
+          Vendredi: 5,
+          Samedi: 6,
+          Dimanche: 0,
+        };
+
+        const currentDate = new Date(reservation.date_reservation);
+        const currentDay = currentDate.getDay();
+        const targetDay = days[dayName];
+        const diff = targetDay - currentDay;
+
+        currentDate.setDate(currentDate.getDate() + diff);
+        return currentDate;
+      };
+
+      // Get the correct date based on day name
+      const eventDate = getDayDate(reservation.day_name);
+
+      // Create full datetime strings by combining date with times
+      const startDateTime = new Date(
+        `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}-${String(eventDate.getDate()).padStart(2, "0")}T${
+          reservation.heure_debut
+        }`
+      );
+      const endDateTime = new Date(
+        `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}-${String(eventDate.getDate()).padStart(2, "0")}T${
+          reservation.heure_fin
+        }`
+      );
+
+      // Group clients with the same seance together
+      const title = `${reservation.cour} - ${reservation.coach}`;
+
       return {
         id: reservation.id_reservation,
         id_seance: reservation.id_seance,
-        title: `${reservation.cour} - ${reservation.client}`,
+        title: title,
         start: startDateTime,
         end: endDateTime,
-        datestart: reservation.heur_debut,
+        datestart: reservation.heure_debut,
         dateend: reservation.heure_fin,
         coach: reservation.coach,
         allDay: false,
         resource: reservation.salle,
-        day: reservation.day_name
+        day: reservation.day_name,
+        client: reservation.client,
       };
     });
   };
@@ -228,8 +258,7 @@ export const TableReservationCoachs = () => {
 
   const isReservationFormValid = () => {
     return (
-      ReservationData.heur_debut !== "" &&
-      ReservationData.heure_fin !== ""
+      ReservationData.heur_debut !== "" && ReservationData.heure_fin !== ""
     );
   };
 
@@ -243,16 +272,13 @@ export const TableReservationCoachs = () => {
       }
       ReservationData.id_seance = selectedSeance.id_seance;
       ReservationData.date_reservation = selectedSeance.date_reservation;
-      const response = await fetch(
-        Endpoint()+"api/reservation/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(ReservationData),
-        }
-      );
+      const response = await fetch(Endpoint() + "api/reservation/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(ReservationData),
+      });
       if (response.ok) {
         const res = await response.json();
         if (res.msg === "Added Successfully!!") {
@@ -284,8 +310,6 @@ export const TableReservationCoachs = () => {
       id_client: null,
       id_seance: null,
       date_operation: getCurrentDate(),
-  
-    
     });
   };
 
@@ -343,7 +367,9 @@ export const TableReservationCoachs = () => {
   useEffect(() => {
     const dataSource = selectedEventIdSeance.map((obj) => {
       const presenceInfo =
-      presenceData && presenceData.find((p) => p.id_etd === obj.id_etudiant) || {};  
+        (presenceData &&
+          presenceData.find((p) => p.id_etd === obj.id_etudiant)) ||
+        {};
       console.log(presenceInfo);
       return {
         key: obj.id_etudiant,
@@ -410,8 +436,48 @@ export const TableReservationCoachs = () => {
           events={events}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: 400 }}
-          views={["month", "week"]}
+          style={{
+            height: 600, // Increased height
+            margin: "0px",
+            padding: "15px",
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+          views={["month", "week", "day"]} // Added day view
+          defaultView="week" // Set default view to week
+          toolbar={true}
+          popup={true}
+          selectable={true}
+          eventPropGetter={(event) => ({
+            style: {
+              backgroundColor: "#1890ff",
+              borderRadius: "4px",
+              opacity: 0.8,
+              color: "white",
+              border: "0",
+              display: "block",
+              padding: "2px 5px",
+            },
+          })}
+          dayPropGetter={(date) => ({
+            style: {
+              backgroundColor:
+                date.getDay() === 0 || date.getDay() === 6
+                  ? "#f5f5f5"
+                  : "#ffffff",
+            },
+          })}
+          formats={{
+            timeGutterFormat: "HH:mm",
+            eventTimeRangeFormat: ({ start, end }) => {
+              return `${dayjs(start).format("HH:mm")} - ${dayjs(end).format(
+                "HH:mm"
+              )}`;
+            },
+            dayFormat: "dddd DD",
+            dayHeaderFormat: "dddd DD MMMM",
+          }}
           messages={{
             date: "Date",
             time: "Heure",
@@ -428,7 +494,7 @@ export const TableReservationCoachs = () => {
             today: "Aujourd'hui",
             agenda: "Agenda",
             noEventsInRange: "Aucun événement dans cette période.",
-            showMore: (total) => `+ ${total} de plus`,
+            showMore: (total) => `+ ${total} événements`,
           }}
         />
       </div>

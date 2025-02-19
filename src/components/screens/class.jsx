@@ -974,7 +974,7 @@ const TableClasse = ({ darkmode }) => {
           onOk={handleModalSubmit}
           onCancel={handleModalCancel}
           okButtonProps={{ disabled: !isFormChanged }}
-          okText="Soumettre"
+          okText="Enregistrer"
           cancelText="Annuler"
         >
           <div className="h-96 overflow-y-auto">

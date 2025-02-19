@@ -112,8 +112,8 @@ const DailyActivityChart = () => {
         }
       >
         <Statistic
-          title="Total Inscriptions"
-          value={totalInscriptions}
+          value={"Total Inscriptions: " + totalInscriptions}
+          valueStyle={{ color: "#1890ff" , fontSize: 16}}
           style={{ marginBottom: 16 }}
         />
         {loading ? (

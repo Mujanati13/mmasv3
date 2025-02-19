@@ -57,7 +57,7 @@ const ContratsType = ({ darkmode }) => {
   };
 
   return (
-    <div className={`w-full overflow-auto overflow-ellipsis h-80 shadow-sm rounded-md pl-4 pr-4 pb-4 pt-4 border 
+    <div className={`w-3/4 overflow-auto overflow-ellipsis h-80 shadow-sm rounded-md pl-4 pr-4 pb-4 pt-4 border 
       ${darkmode 
         ? 'bg-gray-800 border-gray-700 text-gray-200' 
         : 'bg-white border-red-50 text-gray-900'

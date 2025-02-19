@@ -124,7 +124,7 @@ const TableNotification = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(Endpoint()+"api/Parentt/", {
+        const response = await fetch(Endpoint() + "api/Parentt/", {
           headers: {
             Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
           },
@@ -166,7 +166,7 @@ const TableNotification = ({ darkmode }) => {
 
   const fetchClients = async () => {
     try {
-      const response = await fetch(Endpoint()+"api/Parentt/");
+      const response = await fetch(Endpoint() + "api/Parentt/");
       const data = await response.json();
       setClients(data.data);
     } catch (error) {
@@ -176,7 +176,7 @@ const TableNotification = ({ darkmode }) => {
 
   const fetchAbonnements = async () => {
     try {
-      const response = await fetch(Endpoint()+"api/abonnement/");
+      const response = await fetch(Endpoint() + "api/abonnement/");
       const data = await response.json();
       setAbonnements(data.data);
     } catch (error) {
@@ -202,17 +202,14 @@ const TableNotification = ({ darkmode }) => {
 
     const authToken = localStorage.getItem("jwtToken");
     try {
-      const response = await fetch(
-        Endpoint()+"api/notifications/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify(PaymentData),
-        }
-      );
+      const response = await fetch(Endpoint() + "api/notifications/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(PaymentData),
+      });
       if (response.ok) {
         const res = await response.json();
         if (res) {
@@ -236,7 +233,7 @@ const TableNotification = ({ darkmode }) => {
             };
 
             const pushResponse = await fetch(
-              Endpoint()+"api/send/notification/",
+              Endpoint() + "api/send/notification/",
               {
                 method: "POST",
                 headers: {
@@ -278,6 +275,7 @@ const TableNotification = ({ darkmode }) => {
   const showDrawerR = () => {
     if (selectedNotification) {
       setPaymentData(selectedNotification);
+      setActiveStep(1); // Set to index 1 to show "Choisissez les destinataires" step
     }
     setOpen1(true);
   };
@@ -298,7 +296,7 @@ const TableNotification = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(Endpoint()+"api/contrat");
+        const response = await fetch(Endpoint() + "api/contrat");
         const jsonData = await response.json();
         setContartClient(jsonData.data);
       } catch (error) {
@@ -533,14 +531,11 @@ const TableNotification = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          Endpoint()+"api/notifications/",
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
-            },
-          }
-        );
+        const response = await fetch(Endpoint() + "api/notifications/", {
+          headers: {
+            Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
+          },
+        });
         const jsonData = await response.json();
         const processedData = jsonData.map((item, index) => ({
           ...item,
@@ -582,7 +577,7 @@ const TableNotification = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(Endpoint()+"api/staff/", {
+        const response = await fetch(Endpoint() + "api/staff/", {
           headers: {
             Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
           },
@@ -785,7 +780,11 @@ const TableNotification = ({ darkmode }) => {
                 </Button>
               </div>
               <Drawer
-                title="Saisir une nouvelle notification"
+                title={
+                  selectedNotification
+                    ? "Duplication de la notification"
+                    : "Saisir une nouvelle notification"
+                }
                 width={720}
                 onClose={onCloseR}
                 closeIcon={false}

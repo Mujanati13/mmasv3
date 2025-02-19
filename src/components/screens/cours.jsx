@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import {
   Table,
   Tag,
@@ -20,12 +19,46 @@ import {
   EditOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
-import moment from "moment";
-import { handlePrintContractStaff } from "../../utils/printable/contraStaff";
+import { useState, useEffect } from "react";
 import { addNewTrace, getCurrentDate } from "../../utils/helper";
 import { Endpoint } from "../../utils/endpoint";
 
 const TableCours = ({ darkmode }) => {
+  // Niveau mapping
+  const niveauMapping = {
+    CM2: 1,
+    CM1: 5,
+    CE2: 6,
+    CE1: 9,
+    "aide aux devoirs": 20,
+    CP: 21,
+    "6ème": 22,
+    "5ème": 23,
+    "4ème": 24,
+    "3ème": 25,
+    Seconde: 26,
+    Première: 27,
+    Terminale: 28,
+    Kindgarten: 29,
+    "1st grade": 30,
+    "2nd grade": 31,
+    "3rd grade": 32,
+    "4th grade": 33,
+    "5th grade": 34,
+    "6th grade": 35,
+    "7th grade": 36,
+    "8th grade": 37,
+    "9th grade": 38,
+    "10th grade": 39,
+    "11th grade": 40,
+    "12th grade": 41,
+  };
+
+  const niveauOptions = Object.keys(niveauMapping).map((grade) => ({
+    value: grade,
+    label: grade,
+  }));
+
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [columns, setColumns] = useState([]);
@@ -37,165 +70,46 @@ const TableCours = ({ darkmode }) => {
   const [update, setUpdate] = useState(null);
   const [form] = Form.useForm();
   const [open1, setOpen1] = useState(false);
-  const [staffOptions, setStaffOptions] = useState([]);
   const [add, setAdd] = useState(false);
-  const [contarctClient, setcontarctClient] = useState([]);
-  const [contarctStaff, setcontarctStaff] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [changedFields, setChangedFields] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
 
-  // State for room related data
   const [ClientData, setClientData] = useState({
     nom_cour: "",
     description: "",
     Programme: "",
-    id_niveau: 39,
+    niveau: "",
+    id_niveau: null,
     image: "cours/avatar.jpg",
     code_couleur: "Color(0xff42a5f5)",
     is_published: "true",
   });
-  const [CategoireData, setCategoireData] = useState({
-    niveau: "",
-  });
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(Endpoint()+"api/staff/", {
-          headers: {
-            Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
-          },
-        });
-        const jsonData = await response.json();
-        setcontarctClient(jsonData.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          Endpoint()+"api/contratstaff/",
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
-            },
-          }
-        );
-        const jsonData = await response.json();
-        setcontarctStaff(jsonData.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Validation function to check if all required fields are filled for the room form
-  const isRoomFormValid = () => {
-    const {
-      nom_cour,
-      description,
-      Programme,
-      id_niveau,
-      code_couleur,
-      is_published,
-    } = ClientData;
-    if (
-      (nom_cour, description, Programme, id_niveau, code_couleur, is_published)
-    )
-      return true;
-  };
-
-  // Function to add a new chamber
-  const addClient = async () => {
-    // check in contra staf
-    try {
-      // Check if the form is valid before submitting
-
-      const response = await fetch(Endpoint()+"api/cours/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
-        },
-        body: JSON.stringify(ClientData),
-      });
-      if (response.ok) {
-        const res = await response.json();
-        if (res.msg == "Added Successfully!!") {
-          message.success("Cour ajoutée avec succès");
-          setAdd(Math.random() * 1000);
-          const id_staff = JSON.parse(localStorage.getItem("data"));
-          const res = await addNewTrace(
-            22,
-            "Ajout",
-            getCurrentDate(),
-            `${JSON.stringify(ClientData)}`,
-            "cours"
-          );
-          onCloseR();
-        } else {
-          message.warning("Cour non ajoutée");
-          console.log(res);
-        }
-      } else {
-        console.log(response);
-        message.error("Error adding chamber");
-      }
-    } catch (error) {
-      console.log(error);
-      message.error("An error occurred:", error);
+    // Update id_niveau whenever niveau changes
+    if (ClientData.niveau) {
+      setClientData((prev) => ({
+        ...prev,
+        id_niveau: niveauMapping[prev.niveau],
+      }));
     }
-  };
+  }, [ClientData.niveau]);
 
-  const showDrawerR = () => {
-    setOpen1(true);
-  };
-
-  const onCloseR = () => {
-    setOpen1(false);
-    setClientData({
-      nom_cour: "",
-      description: "",
-      programme: "",
-      id_niveau: 39,
-      image: "cours/avatar.jpg",
-    });
-  };
-
-  // Function to handle form submission in the room drawer
-  const handleRoomSubmit = () => {
-    addClient();
-  };
-
-  const handleViewDetails = (course) => {
-    setSelectedCourse(course);
-    setIsViewModalVisible(true);
-  };
-
-  const authToken = localStorage.getItem("jwtToken"); // Replace with your actual auth token
+  const authToken = localStorage.getItem("jwtToken");
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(Endpoint()+"api/cours/", {
+        const response = await fetch(Endpoint() + "api/cours/", {
           headers: {
-            Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
+            Authorization: `Bearer ${authToken}`,
           },
         });
         const jsonData = await response.json();
 
-        // Ensure each row has a unique key
         const processedData = jsonData.data.map((item, index) => ({
           ...item,
           key: item.id_cour || index,
@@ -205,10 +119,9 @@ const TableCours = ({ darkmode }) => {
         setData(processedData);
         setFilteredData(processedData);
 
-        // Generate columns based on the desired keys
         const desiredKeys = ["nom_cours", "description", "niveau", ""];
         const generatedColumns = desiredKeys.map((key) => ({
-          title: capitalizeFirstLetter(key.replace(/\_/g, " ")), // Capitalize the first letter
+          title: capitalizeFirstLetter(key.replace(/\_/g, " ")),
           dataIndex: key,
           key,
           render: (text, record) => {
@@ -238,12 +151,10 @@ const TableCours = ({ darkmode }) => {
     fetchData();
   }, [authToken, update, add]);
 
-  // Function to capitalize the first letter of a string
   const capitalizeFirstLetter = (str) => {
     return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
-  // Handle search input change
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchText(value);
@@ -253,19 +164,81 @@ const TableCours = ({ darkmode }) => {
     setFilteredData(filtered);
   };
 
-  // Row selection object indicates the need for row selection
+  const addClient = async () => {
+    try {
+      if (!ClientData.niveau) {
+        message.error("Please select a niveau");
+        return;
+      }
+
+      const response = await fetch(Endpoint() + "api/cours/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(ClientData),
+      });
+
+      if (response.ok) {
+        const res = await response.json();
+        if (res.msg === "Added Successfully!!") {
+          message.success("Cour ajoutée avec succès");
+          setAdd(Math.random() * 1000);
+          await addNewTrace(
+            22,
+            "Ajout",
+            getCurrentDate(),
+            `${JSON.stringify(ClientData)}`,
+            "cours"
+          );
+          onCloseR();
+        } else {
+          message.warning("Cour non ajoutée");
+        }
+      } else {
+        message.error("Error adding course");
+      }
+    } catch (error) {
+      console.error(error);
+      message.error("An error occurred");
+    }
+  };
+
+  const showDrawerR = () => {
+    setOpen1(true);
+  };
+
+  const onCloseR = () => {
+    setOpen1(false);
+    setClientData({
+      nom_cour: "",
+      description: "",
+      Programme: "",
+      niveau: "",
+      id_niveau: null,
+      image: "cours/avatar.jpg",
+      code_couleur: "Color(0xff42a5f5)",
+      is_published: "true",
+    });
+  };
+
+  const handleRoomSubmit = () => {
+    addClient();
+  };
+
+  const handleViewDetails = (course) => {
+    setSelectedCourse(course);
+    setIsViewModalVisible(true);
+  };
+
   const rowSelection = {
     selectedRowKeys,
     onChange: (selectedRowKeys) => {
       setSelectedRowKeys(selectedRowKeys);
-      console.log("selectedRowKeys changed: ", selectedRowKeys);
     },
-    getCheckboxProps: (record) => ({
-      disabled: record.name === "Disabled User", // Disable checkbox for specific rows
-    }),
   };
 
-  // Handle edit button click
   const handleEditClick = () => {
     if (selectedRowKeys.length === 1) {
       const clientToEdit = data.find(
@@ -281,8 +254,12 @@ const TableCours = ({ darkmode }) => {
   const handleModalSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const { PeriodeSalaire } = values;
-      console.log(editingClient);
+
+      // Update id_niveau based on selected niveau if it exists in the form values
+      if (values.niveau) {
+        values.id_niveau = niveauMapping[values.niveau];
+      }
+
       const response = await fetch(`${Endpoint()}api/cours/`, {
         method: "PUT",
         headers: {
@@ -307,7 +284,6 @@ const TableCours = ({ darkmode }) => {
         setIsModalVisible(false);
         setEditingClient(null);
         setSelectedRowKeys([]);
-        // Reset the form fields
         form.resetFields();
       } else {
         message.error("Erreur lors de la mise à jour du client");
@@ -329,7 +305,6 @@ const TableCours = ({ darkmode }) => {
       try {
         const promises = selectedRowKeys.map(async (key) => {
           const clientToDelete = data.find((client) => client.key === key);
-          console.log(clientToDelete);
           const response = await fetch(
             `${Endpoint()}api/cours/${clientToDelete.id_cour}`,
             {
@@ -345,12 +320,11 @@ const TableCours = ({ darkmode }) => {
           if (!response.ok) {
             throw new Error(`Failed to delete client with key ${key}`);
           }
-          const id_staff = JSON.parse(localStorage.getItem("data"));
-          const res = await addNewTrace(
+          await addNewTrace(
             22,
             "Suppression",
             getCurrentDate(),
-            `${JSON.stringify(ClientData)}`,
+            `${JSON.stringify(clientToDelete)}`,
             "cours"
           );
         });
@@ -391,17 +365,15 @@ const TableCours = ({ darkmode }) => {
       Object.keys(changedValues).forEach((key) => {
         const newField = {
           name: formatFieldName(key),
-          oldValue: editingClient[key], // Use editingClient instead of selectedRecord
+          oldValue: editingClient[key],
           newValue: changedValues[key],
         };
         const existingIndex = updatedFields.findIndex(
           (field) => field.name === newField.name
         );
         if (existingIndex !== -1) {
-          // Update existing field
           updatedFields[existingIndex] = newField;
         } else {
-          // Add new field
           updatedFields.push(newField);
         }
       });
@@ -418,7 +390,7 @@ const TableCours = ({ darkmode }) => {
           colorPrimary: darkmode ? "#00b96b" : "#1677ff",
           colorBgBase: darkmode ? "#141414" : "#fff",
           colorTextBase: darkmode ? "#fff" : "#000",
-          colorBorder: darkmode ? "#fff" : "#d9d9d9", // Set border to white in dark mode
+          colorBorder: darkmode ? "#fff" : "#d9d9d9",
         },
       }}
     >
@@ -449,6 +421,11 @@ const TableCours = ({ darkmode }) => {
                 dataIndex: "Programme",
                 key: "Programme",
               },
+              {
+                title: "Niveau",
+                dataIndex: "niveau",
+                key: "niveau",
+              },
             ]}
             dataSource={selectedCourse ? [selectedCourse] : []}
             pagination={false}
@@ -466,38 +443,32 @@ const TableCours = ({ darkmode }) => {
               />
             </div>
             <div className="flex items-center space-x-6">
-              {/* <EditOutlined
-                className="cursor-pointer"
-                onClick={handleEditClick}
-              /> */}
-              {/* {(JSON.parse(localStorage.getItem(`data`))[0].fonction ==
-              "Administration" ||
-              JSON.parse(localStorage.getItem(`data`))[0].fonction ==
-                "secretaire") &&
-            selectedRowKeys.length === 1 ? ( */}
-              <Popconfirm
-                title="Supprimer le cours"
-                description="Êtes-vous sûr de supprimer ce cours"
-                onConfirm={confirm}
-                onCancel={cancel}
-                okText="oui"
-                cancelText="Non"
-              >
-                <DeleteOutlined className="cursor-pointer" />{" "}
-              </Popconfirm>
-              {/* ) : (
-              ""
-            )} */}
+              {selectedRowKeys.length === 1 && (
+                <EditOutlined
+                  className="cursor-pointer"
+                  onClick={handleEditClick}
+                />
+              )}
+              {(JSON.parse(localStorage.getItem(`data`))[0].fonction ===
+                "Administration" ||
+                JSON.parse(localStorage.getItem(`data`))[0].fonction ===
+                  "secretaire") &&
+              selectedRowKeys.length >= 1 ? (
+                <Popconfirm
+                  title="Supprimer le cours"
+                  description="Êtes-vous sûr de supprimer ce cours"
+                  onConfirm={confirm}
+                  onCancel={cancel}
+                  okText="oui"
+                  cancelText="Non"
+                >
+                  <DeleteOutlined className="cursor-pointer" />
+                </Popconfirm>
+              ) : null}
             </div>
           </div>
-          {/* add new client  */}
           <div>
             <div className="flex items-center space-x-3">
-              {/* {(JSON.parse(localStorage.getItem(`data`))[0].fonction ==
-              "Administration" ||
-              JSON.parse(localStorage.getItem(`data`))[0].fonction ==
-                "secretaire") &&
-            selectedRowKeys.length === 1 ? ( */}
               <Button
                 type="default"
                 onClick={showDrawerR}
@@ -505,9 +476,6 @@ const TableCours = ({ darkmode }) => {
               >
                 Ajoute Cours
               </Button>
-              {/* ) : (
-          ""
-        )} */}
             </div>
             <Drawer
               title="Saisir un nouveau Cours"
@@ -534,7 +502,7 @@ const TableCours = ({ darkmode }) => {
                             })
                           }
                           placeholder="Nom cours"
-                        ></Input>
+                        />
                       </div>
                       <div>
                         <div>*Description</div>
@@ -547,7 +515,7 @@ const TableCours = ({ darkmode }) => {
                             })
                           }
                           placeholder="Description"
-                        ></Input>
+                        />
                       </div>
                       <div>
                         <div>*Programme</div>
@@ -560,10 +528,10 @@ const TableCours = ({ darkmode }) => {
                             })
                           }
                           placeholder="Programme"
-                        ></Input>
+                        />
                       </div>
                       <div>
-                        <label htmlFor="Année" className="block font-medium">
+                        <label htmlFor="Niveau" className="block font-medium">
                           *Niveau
                         </label>
                         <Select
@@ -573,32 +541,19 @@ const TableCours = ({ darkmode }) => {
                           value={ClientData.niveau}
                           className="w-full"
                           optionFilterProp="children"
-                          onChange={(value, option) => {
+                          onChange={(value) => {
                             setClientData({
                               ...ClientData,
                               niveau: value,
+                              id_niveau: niveauMapping[value],
                             });
                           }}
                           filterOption={(input, option) =>
-                            (option?.label ?? "").startsWith(input)
-                          }
-                          filterSort={(optionA, optionB) =>
-                            (optionA?.label ?? "")
+                            (option?.label ?? "")
                               .toLowerCase()
-                              .localeCompare(
-                                (optionB?.label ?? "").toLowerCase()
-                              )
+                              .includes(input.toLowerCase())
                           }
-                          options={[
-                            { value: "12th grade", label: "12th grade" },
-                            { value: "11th grade", label: "11th grade" },
-                            { value: "10th grade", label: "10th grade" },
-                            { value: "9th grade", label: "9th grade" },
-                            { value: "8th grade", label: "8th grade" },
-                            { value: "7th grade", label: "7th grade" },
-                            { value: "6th grade", label: "6th grade" },
-                            { value: "5th grade", label: "5th grade" },
-                          ]}
+                          options={niveauOptions}
                         />
                       </div>
                     </div>
@@ -634,7 +589,7 @@ const TableCours = ({ darkmode }) => {
           onOk={handleModalSubmit}
           onCancel={handleModalCancel}
           okButtonProps={{ disabled: !isFormChanged }}
-          okText="Soumettre"
+          okText="Enregistrer"
           cancelText="Annuler"
         >
           <div className="h-96 overflow-y-auto">
@@ -643,28 +598,47 @@ const TableCours = ({ darkmode }) => {
               form={form}
               layout="vertical"
             >
-              <Form.Item name="nom_cour" label="Nom cours">
-                <Input rules={[{ required: true, message: "Nom cours" }]} />
-              </Form.Item>
-              <Form.Item name="description" label="description">
-                <Input rules={[{ required: true, message: "description" }]} />
-              </Form.Item>
-              <Form.Item name="programme" label="programme">
-                <Input rules={[{ required: true, message: "programme" }]} />
-              </Form.Item>
               <Form.Item
-                name="genre"
-                label="Genre"
+                name="nom_cour"
+                label="Nom cours"
                 rules={[
-                  { required: true, message: "Gene selection is required" },
+                  { required: true, message: "Le nom du cours est requis" },
                 ]}
               >
-                <Select placeholder="Select a gene">
-                  <Option value="Home">Home</Option>
-                  <Option value="Femme">Femme</Option>
-                  <Option value="Mixte">Mixte</Option>
-                  <Option value="Junior">Junior</Option>
-                </Select>
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="description"
+                label="Description"
+                rules={[
+                  { required: true, message: "La description est requise" },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="Programme"
+                label="Programme"
+                rules={[{ required: true, message: "Le programme est requis" }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="niveau"
+                label="Niveau"
+                rules={[{ required: true, message: "Le niveau est requis" }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Sélectionner un niveau"
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.label ?? "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                  options={niveauOptions}
+                />
               </Form.Item>
             </Form>
           </div>

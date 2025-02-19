@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Bar } from "@ant-design/plots";
 import { Spin } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import { Endpoint } from "../../utils/endpoint";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const CourseDistribution = ({ darkmode }) => {
   const [data, setData] = useState([]);
@@ -42,90 +42,20 @@ const CourseDistribution = ({ darkmode }) => {
     fetchData();
   }, []);
 
-  const config = {
-    data,
-    xField: "students",
-    yField: "course",
-    seriesField: "course",
-    meta: {
-      course: {
-        alias: "Cours",
-      },
-      students: {
-        alias: "Étudiants",
-      },
-    },
-    legend: {
-      position: "top",
-      itemName: {
-        style: {
-          fill: darkmode ? "#e5e7eb" : "#333333",
-        },
-      },
-    },
-    xAxis: {
-      label: {
-        formatter: (v) => `${v} étudiants`,
-        style: {
-          fill: darkmode ? "#e5e7eb" : "#333333",
-        },
-      },
-      line: {
-        style: {
-          stroke: darkmode ? "#4B5563" : "#D1D5DB",
-        },
-      },
-      grid: {
-        line: {
-          style: {
-            stroke: darkmode ? "#374151" : "#E5E7EB",
-            lineDash: [4, 4],
-          },
-        },
-      },
-    },
-    yAxis: {
-      label: {
-        autoRotate: false,
-        style: {
-          fill: darkmode ? "#e5e7eb" : "#333333",
-        },
-      },
-      line: {
-        style: {
-          stroke: darkmode ? "#4B5563" : "#D1D5DB",
-        },
-      },
-    },
-    label: {
-      position: "right",
-      offset: 4,
-      style: {
-        fill: darkmode ? "#e5e7eb" : "#333333",
-      },
-    },
-    barBackground: {
-      style: {
-        fill: darkmode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.1)",
-      },
-    },
-    color: darkmode
-      ? ["#60A5FA", "#818CF8", "#A78BFA", "#F472B6", "#FB7185"]
-      : undefined,
-    theme: darkmode
-      ? {
-          backgroundColor: "#1F2937",
-        }
-      : undefined,
-    interactions: [
-      {
-        type: "active-region",
-        enable: false,
-      },
-    ],
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className={`p-2 ${darkmode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+          <p className={`text-sm ${darkmode ? 'text-gray-200' : 'text-gray-800'}`}>
+            {`${label}: ${payload[0].value} étudiants`}
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div
         className={`w-full h-80 ${darkmode ? "bg-gray-800" : "bg-white"} 
@@ -141,8 +71,9 @@ const CourseDistribution = ({ darkmode }) => {
         />
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div
         className={`w-full h-80 ${
@@ -153,6 +84,7 @@ const CourseDistribution = ({ darkmode }) => {
         {error}
       </div>
     );
+  }
 
   return (
     <div
@@ -167,7 +99,39 @@ const CourseDistribution = ({ darkmode }) => {
         Répartition des cours par étudiant
       </h2>
       <div className="w-full h-60">
-        <Bar {...config} />
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={data}
+            layout="vertical"
+            margin={{ top: 0, right: 0, left: 20, bottom: 0 }}
+          >
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              horizontal={false}
+              stroke={darkmode ? "#374151" : "#E5E7EB"} 
+            />
+            <XAxis 
+              type="number"
+              tick={{ fill: darkmode ? "#e5e7eb" : "#333333" }}
+              tickFormatter={(value) => `${value} étudiants`}
+              stroke={darkmode ? "#4B5563" : "#D1D5DB"}
+            />
+            <YAxis 
+              type="category"
+              dataKey="course"
+              tick={{ fill: darkmode ? "#e5e7eb" : "#333333" }}
+              stroke={darkmode ? "#4B5563" : "#D1D5DB"}
+            />
+            <Tooltip 
+              content={<CustomTooltip />}
+            />
+            <Bar 
+              dataKey="students"
+              fill={darkmode ? "#60A5FA" : "#3B82F6"}
+              radius={[0, 4, 4, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
