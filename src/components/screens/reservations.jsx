@@ -58,6 +58,8 @@ const TableReservation = ({ darkmode }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [changedFields, setChangedFields] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
+  const [selectedClients, setSelectedClients] = useState([]); // Replace selectedClient state
+
   const [filters, setFilters] = useState({
     cour: [],
     coach: [],
@@ -175,13 +177,12 @@ const TableReservation = ({ darkmode }) => {
     useState(false);
   const [selectedSeance, setSelectedSeance] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [selectedClients, setSelectedClients] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       console.log(selectedSeance);
 
-      setLoading(true);
+      // setLoading(true);
       try {
         const response = await fetch(
           Endpoint() +
@@ -208,10 +209,6 @@ const TableReservation = ({ darkmode }) => {
     setSelectedSeance(seance);
     setIsReservationDrawerVisible(true);
   };
-
-  // Update the state to handle multiple selected clients
-
-  // Update the handleReservationSubmit function to handle multiple clients
   const handleReservationSubmit = async () => {
     if (selectedClients.length === 0) {
       message.error("Veuillez sélectionner au moins un client");
@@ -222,8 +219,7 @@ const TableReservation = ({ darkmode }) => {
     const { startTime, endTime } = getTimes(selectedSeance);
 
     try {
-      // Create an array of promises for each client reservation
-      const reservationPromises = selectedClients.map(async (clientId) => {
+      const promises = selectedClients.map(async (clientId) => {
         const response = await fetch(Endpoint() + "/api/Conditio_reserv/", {
           method: "POST",
           headers: {
@@ -241,38 +237,35 @@ const TableReservation = ({ darkmode }) => {
           }),
         });
 
-        return response.json();
+        const data = await response.json();
+        return { response, data };
       });
 
-      // Wait for all reservations to complete
-      const results = await Promise.all(reservationPromises);
+      const results = await Promise.all(promises);
 
-      // Check if any reservations were successful
-      const successfulReservations = results.filter(
-        (result) => result.msg === "Added Successfully!!"
-      );
+      const successCount = results.filter(
+        ({ data }) => data.msg === "Added Successfully!!"
+      ).length;
 
-      if (successfulReservations.length > 0) {
+      if (successCount > 0) {
         message.success(
-          `${successfulReservations.length} réservation(s) ajoutée(s) avec succès`
+          `${successCount} réservation(s) ajoutée(s) avec succès`
         );
       }
 
-      // Show warnings for any failed reservations
-      results.forEach((result) => {
-        if (result.msg !== "Added Successfully!!") {
-          message.warning(result.msg);
-        }
-      });
+      const warnings = results.filter(
+        ({ data }) => data.msg !== "Added Successfully!!"
+      );
+      if (warnings.length > 0) {
+        warnings.forEach(({ data }) => message.warning(data.msg));
+      }
 
       setIsReservationDrawerVisible(false);
       setSelectedClients([]);
-      form.resetFields();
       onClose();
       fetchData();
     } catch (error) {
       console.error("Error making reservations:", error);
-      // message.error("Une erreur est survenue lors des réservations");
     }
   };
 
@@ -340,13 +333,56 @@ const TableReservation = ({ darkmode }) => {
     }
   };
 
+  const checkAndFetchAvailability = async () => {
+    if (
+      ClientData.jour != null &&
+      ClientData.heure_debut != null &&
+      ClientData.heure_fin != null
+    ) {
+      try {
+        const response = await fetch(
+          `${Endpoint()}/api/sallesdispo/?jour=${ClientData.jour}&heur_debut=${
+            ClientData.heure_debut
+          }&heur_fin=${ClientData.heure_fin}`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+        const data = await response.json();
+        setOccupiedSessions(data.data);
+
+        // Filter available salles and coaches
+        const availableSalles = Salle.filter(
+          (salle) =>
+            !data.data.some((session) => session.id_salle === salle.value)
+        );
+
+        const availableCoaches = Coach.filter(
+          (coach) =>
+            !data.data.some((session) => session.id_coach === coach.value)
+        );
+
+        // Update the state with available salles and coaches
+        setAvailableSalles(availableSalles);
+        setAvailableCoaches(availableCoaches);
+        setDisableSalleCoach(false);
+      } catch (error) {
+        console.error("Error fetching availability:", error);
+      }
+    } else {
+      setDisableSalleCoach(true);
+    }
+  };
+
   const checkAndFetchAvailability2 = async (jour, heure_debut, heure_fin) => {
     // Input validation
     if (!jour || !heure_debut || !heure_fin) {
       setDisableSalleCoach(true);
       return;
     }
-  
+
     try {
       // Fetch availability data
       const response = await fetch(
@@ -357,23 +393,25 @@ const TableReservation = ({ darkmode }) => {
           },
         }
       );
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
       setOccupiedSessions(data.data);
-  
+
       // Filter available salles and coaches
       const availableSalles = Salle.filter(
-        (salle) => !data.data.data.some((session) => session.id_salle === salle.value)
+        (salle) =>
+          !data.data.some((session) => session.id_salle === salle.value)
       );
-  
+
       const availableCoaches = Coach.filter(
-        (coach) => !data.data.data.some((session) => session.id_coach === coach.value)
+        (coach) =>
+          !data.data.some((session) => session.id_coach === coach.value)
       );
-  
+
       // Handle editing mode
       if (editingClient) {
         // Check if current selections are still available
@@ -383,7 +421,7 @@ const TableReservation = ({ darkmode }) => {
         const isCurrentCoachAvailable = availableCoaches.some(
           (coach) => coach.value === editingClient.id_coach
         );
-  
+
         // Handle unavailable salle
         if (!isCurrentSalleAvailable && editingClient.id_salle) {
           message.warning("La salle sélectionnée n'est plus disponible");
@@ -394,7 +432,7 @@ const TableReservation = ({ darkmode }) => {
             capacity: null,
           }));
         }
-  
+
         // Handle unavailable coach
         if (!isCurrentCoachAvailable && editingClient.id_coach) {
           message.warning("Le coach sélectionné n'est plus disponible");
@@ -405,12 +443,11 @@ const TableReservation = ({ darkmode }) => {
           }));
         }
       }
-  
+
       // Update available options
       setAvailableSalles(availableSalles);
       setAvailableCoaches(availableCoaches);
       setDisableSalleCoach(false);
-  
     } catch (error) {
       console.error("Error fetching availability:", error);
       // message.error("Erreur lors de la vérification des disponibilités");
@@ -432,6 +469,11 @@ const TableReservation = ({ darkmode }) => {
         return;
       }
       const id_staff = JSON.parse(localStorage.getItem("data"));
+      // ClientData.id_coach = id_staff[0].id_employe
+      console.log("====================================");
+      ClientData.id_prof = ClientData.id_coach;
+      ClientData.type_seance = "Aide aux devoirs";
+      console.log("====================================");
       const response = await fetch(Endpoint() + "/api/seance/", {
         method: "POST",
         headers: {
@@ -663,6 +705,25 @@ const TableReservation = ({ darkmode }) => {
     }
   };
 
+  // Modify the handleEditClickCalander function
+  const handleEditClickCalander = async (id) => {
+    const clientToEdit = data.find((client) => client.key == id);
+    if (clientToEdit != undefined) {
+      setEditingClient(clientToEdit);
+      form.setFieldsValue(clientToEdit);
+
+      // Fetch available salles and coaches before opening the modal
+      await checkAndFetchAvailability(
+        clientToEdit.jour,
+        clientToEdit.heure_debut,
+        clientToEdit.heure_fin,
+        clientToEdit.id_seance
+      );
+
+      setIsModalVisible(true);
+    }
+  };
+
   const handleModalSubmit = async () => {
     // if (!isValidTimeRange()) {
     //   message.warning("L'heure de fin doit être après l'heure de début");
@@ -678,12 +739,12 @@ const TableReservation = ({ darkmode }) => {
         (coach) => coach.value === editingClient.id_coach
       );
 
-      if (!isSalleAvailable || !isCoachAvailable) {
-        message.error(
-          "La salle ou le coach sélectionné n'est pas disponible pour cet horaire."
-        );
-        return;
-      }
+      // if (!isSalleAvailable || !isCoachAvailable) {
+      //   message.error(
+      //     "La salle ou le coach sélectionné n'est pas disponible pour cet horaire."
+      //   );
+      //   return;
+      // }
       const response = await fetch(Endpoint() + `/api/seance/`, {
         method: "PUT",
         headers: {
@@ -955,7 +1016,7 @@ const TableReservation = ({ darkmode }) => {
   }, []);
 
   useEffect(() => {
-    // console.log(editingClient);
+    console.log(editingClient);
 
     if (editingClient != undefined) {
       checkAndFetchAvailability2(
@@ -997,7 +1058,7 @@ const TableReservation = ({ darkmode }) => {
       updatedClientData.heure_debut,
       updatedClientData.heure_fin
     );
-    checkAndFetchAvailability2();
+    checkAndFetchAvailability();
   };
 
   const handleEditingTimeChange = (time, type) => {
@@ -1042,6 +1103,7 @@ const TableReservation = ({ darkmode }) => {
 
   const onClose = () => {
     setIsReservationDrawerVisible(false);
+    setSelectedClients([]);
     form.resetFields();
   };
 
@@ -1068,7 +1130,7 @@ const TableReservation = ({ darkmode }) => {
           <Form form={form} layout="vertical">
             <Form.Item
               name="clients"
-              label="Sélectionner les clients"
+              label="Sélectionner des clients"
               rules={[
                 {
                   required: true,
@@ -1079,13 +1141,15 @@ const TableReservation = ({ darkmode }) => {
               <Select
                 mode="multiple"
                 showSearch
-                placeholder="Sélectionner les clients"
+                placeholder="Sélectionner des clients"
                 optionFilterProp="children"
                 filterOption={(input, option) =>
                   option.children.toLowerCase().indexOf(input.toLowerCase()) >=
                   0
                 }
-                onChange={(values) => setSelectedClients(values)}
+                onChange={(values) => {
+                  setSelectedClients(values);
+                }}
               >
                 {clients.map((client) => (
                   <Select.Option
@@ -1097,7 +1161,6 @@ const TableReservation = ({ darkmode }) => {
                 ))}
               </Select>
             </Form.Item>
-
             <Form.Item className="flex space-x-2">
               <Button type="primary" onClick={handleReservationSubmit}>
                 Confirmer la réservation
@@ -1172,6 +1235,14 @@ const TableReservation = ({ darkmode }) => {
                 onChange={(v) => {
                   setDisplay(!display);
                   setDisplayValue(v);
+                  setSelectedRowKeys([]);
+                  setEditingClient(null);
+                  setSelectedSeance(null);
+                  setSelectedClients([]);
+                  setIsModalVisible(false);
+                  setIsModalVisible1(false);
+                  setIsReservationDrawerVisible(false);
+              
                 }}
                 value={displayValue}
                 options={[
@@ -1254,7 +1325,7 @@ const TableReservation = ({ darkmode }) => {
                               jour: parseInt(value),
                               day_name: option.label,
                             });
-                            checkAndFetchAvailability2();
+                            checkAndFetchAvailability();
                           }}
                           filterOption={(input, option) =>
                             (option?.label ?? "").startsWith(input)
@@ -1417,7 +1488,7 @@ const TableReservation = ({ darkmode }) => {
                 <WeekView
                   startDayHour={9}
                   endDayHour={17}
-                  // excludedDays={""} // Exclude Saturday and Sunday
+                  excludedDays={[0]} // Exclude Saturday and Sunday
                   timeTableCellComponent={(props) => (
                     <WeekView.TimeTableCell
                       {...props}
@@ -1628,8 +1699,8 @@ const TableReservation = ({ darkmode }) => {
                 onChange={(value, option) => {
                   if (value !== editingClient.jour) {
                     setIsFormChanged(true);
-                    editingClient.salle = "";
-                    editingClient.coach = "";
+                    // editingClient.salle = "";
+                    // editingClient.coach = "";
 
                     setChangedFields((prev) => [
                       ...new Set([...prev, "jour", "day_name"]),

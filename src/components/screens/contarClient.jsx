@@ -78,6 +78,7 @@ const TableContract = ({ darkmode }) => {
     reste: null,
     id_abn: null,
     Type: "",
+    type: "",
     reduction: 0,
     id_etablissement: 19,
     abonnement: "",
@@ -177,14 +178,11 @@ const TableContract = ({ darkmode }) => {
 
   const fetchClients = async () => {
     try {
-      const response = await fetch(
-        Endpoint()+"/api/Parentt/",
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+      const response = await fetch(Endpoint() + "/api/Parentt/", {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       const data = await response.json();
       setClients(data.data);
     } catch (error) {
@@ -213,14 +211,11 @@ const TableContract = ({ darkmode }) => {
 
   const fetchAbonnements = async () => {
     try {
-      const response = await fetch(
-        Endpoint()+"/api/abonnement/",
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+      const response = await fetch(Endpoint() + "/api/abonnement/", {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       const data = await response.json();
       setAbonnements(data.data);
     } catch (error) {
@@ -230,14 +225,11 @@ const TableContract = ({ darkmode }) => {
 
   const fetchStudents = async () => {
     try {
-      const response = await fetch(
-        Endpoint()+"/api/etudiants/",
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+      const response = await fetch(Endpoint() + "/api/etudiants/", {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       const jsonData = await response.json();
       setStudents(jsonData.data);
     } catch (error) {
@@ -272,39 +264,53 @@ const TableContract = ({ darkmode }) => {
 
   // Function to add a new contract
   const addContract = async () => {
+    // Format date for consistency
     const date = new Date(ContractData.date_fin);
     const year = date.getFullYear();
     let month = date.getMonth() + 1;
     let day = date.getDate();
-
     ContractData.date_fin = `${year}-${month}-${day}`;
+
+    // Get admin data
     const id_staff = JSON.parse(localStorage.getItem("data"));
     ContractData.id_admin = id_staff[0].id_employe;
     ContractData.Type = true;
 
-    const dataToSend = {
-      ...ContractData,
-      transactions: transactions.map((transaction) => ({
-        ...transaction,
-        date: getCurrentDate(),
-      })),
-    };
-    console.log(dataToSend);
-
-    const authToken = localStorage.getItem("jwtToken");
     try {
-      // First, add the contract
-      const contractResponse = await fetch(
-        Endpoint()+"/api/contrat/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify(dataToSend),
-        }
+      // Check for existing contracts with same student, subscription and overlapping dates
+      const existingContracts = data.filter(
+        (contract) =>
+          contract.id_etd === ContractData.id_etd &&
+          contract.id_abn === ContractData.id_abn &&
+          // Check if dates overlap
+          new Date(contract.date_debut) <= new Date(ContractData.date_fin) &&
+          new Date(contract.date_fin) >= new Date(ContractData.date_debut)
       );
+
+      if (existingContracts.length > 0) {
+        message.warning(
+          "Un contrat existe déjà pour cet étudiant avec le même abonnement pour cette période"
+        );
+        return;
+      }
+
+      const dataToSend = {
+        ...ContractData,
+        transactions: transactions.map((transaction) => ({
+          ...transaction,
+          date: getCurrentDate(),
+        })),
+      };
+
+      // Add contract if no duplicates found
+      const contractResponse = await fetch(Endpoint() + "/api/contrat/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(dataToSend),
+      });
 
       if (contractResponse.ok) {
         const contractResult = await contractResponse.json();
@@ -320,7 +326,8 @@ const TableContract = ({ darkmode }) => {
         message.error("Error adding contract");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error:", error);
+      message.error("Une erreur s'est produite lors de l'ajout du contrat");
     }
   };
 
@@ -436,8 +443,8 @@ const TableContract = ({ darkmode }) => {
               }))}
             />
           </div>
-          <div>
-            <label htmlFor="client">Client</label>
+          {/* <div>
+            <label htmlFor="client">Parent</label>
             <Select
               id="client"
               showSearch
@@ -476,7 +483,7 @@ const TableContract = ({ darkmode }) => {
                 label: `${client.nom} ${client.prenom}`,
               }))}
             />
-          </div>
+          </div> */}
           <div>
             <label htmlFor="client">Etudiants</label>
             <Select
@@ -546,14 +553,14 @@ const TableContract = ({ darkmode }) => {
             <Select
               id="type"
               showSearch
-              disabled={true}
+              // disabled={true}
               placeholder="Type"
-              value={ContractData.Type} // Use ContractData.Type instead of ContractData.type
+              value={ContractData.type} // Use ContractData.Type instead of ContractData.type
               className="w-full"
               onChange={(value) =>
                 setContractData((prevContractData) => ({
                   ...prevContractData,
-                  Type: value,
+                  type: value,
                 }))
               } // Use setContractData to update ContractData state
               options={[
@@ -782,45 +789,70 @@ const TableContract = ({ darkmode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          Endpoint()+"/api/contrat/",
-          {
+        // Fetch both contracts and students data in parallel
+        const [contractResponse, studentsResponse] = await Promise.all([
+          fetch(Endpoint() + "/api/contrat/", {
             headers: {
               Authorization: `Bearer ${authToken}`,
             },
-          }
-        );
-        const jsonData = await response.json();
-        const processedData = jsonData.data.map((item, index) => ({
+          }),
+          fetch(Endpoint() + "/api/etudiants/", {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }),
+        ]);
+
+        const [contractData, studentsData] = await Promise.all([
+          contractResponse.json(),
+          studentsResponse.json(),
+        ]);
+
+        // Update students state
+        setStudents(studentsData.data);
+
+        // Process contract data
+        const processedData = contractData.data.map((item, index) => ({
           ...item,
           key: item.id_contrat || index,
         }));
-        console.log(processedData);
+
         setData(processedData);
         setFilteredData(processedData);
 
-        // Updated desiredKeys with more meaningful French names
+        // Define columns with student name rendering
         const desiredKeys = [
-          { title: "Nom", dataIndex: "client", key: "client" },
-          { title: "Prénom", dataIndex: "Prenom_client", key: "Prenom_client" },
+          {
+            title: "Etudiants",
+            dataIndex: "id_etd",
+            key: "nom_complet",
+            render: (id_etd) => {
+              const student = studentsData.data.find(
+                (s) => s.id_etudiant === id_etd
+              );
+              return student ? `${student.nom} ${student.prenom}` : "-";
+            },
+          },
           {
             title: "Type d'Abonnement",
             dataIndex: "abonnement",
             key: "abonnement",
           },
           {
-            title: "Réduction",
-            dataIndex: "reduction",
-            key: "reduction",
-            render: (text) => `${text} MAD`,
+            title: "Type",
+            dataIndex: "type",
+            key: "type",
           },
-          { title: "Type", dataIndex: "type", key: "type" },
           {
             title: "Date de Début",
             dataIndex: "date_debut",
             key: "date_debut",
           },
-          { title: "Date de Fin", dataIndex: "date_fin", key: "date_fin" },
+          {
+            title: "Date de Fin",
+            dataIndex: "date_fin",
+            key: "date_fin",
+          },
           {
             title: "Catégorie d'Abonnement",
             dataIndex: "cat_abn",
@@ -838,23 +870,11 @@ const TableContract = ({ darkmode }) => {
           },
         ];
 
-        const generatedColumns = desiredKeys.map(({ key, label }) => ({
-          title: label,
-          dataIndex: key,
-          key,
-          render: (text, record) => {
-            if (key === "reduction") {
-              return `${text} MAD`;
-            } else if (key === "actions") {
-              return (
-                <EyeOutlined
-                  onClick={() => handleViewDetails(record)}
-                  style={{ cursor: "pointer" }}
-                />
-              );
-            }
-            return text;
-          },
+        const generatedColumns = desiredKeys.map((column) => ({
+          title: column.title,
+          dataIndex: column.dataIndex,
+          key: column.key,
+          render: column.render || ((text) => text),
         }));
 
         setColumns(generatedColumns);
@@ -867,7 +887,6 @@ const TableContract = ({ darkmode }) => {
 
     fetchData();
   }, [authToken, add]);
-
   // Function to capitalize the first letter of a string
   const capitalizeFirstLetter = (str) => {
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -1009,14 +1028,14 @@ const TableContract = ({ darkmode }) => {
         value: contract.cat_abn,
       },
       // { key: "section3", property: "Informations Financières", value: "" },
-      {
-        key: "reduction",
-        property: "Réduction",
-        value:
-          contract.reduction !== undefined
-            ? `${contract.reduction} MAD`
-            : undefined,
-      },
+      // {
+      //   key: "reduction",
+      //   property: "Réduction",
+      //   value:
+      //     contract.reduction !== undefined
+      //       ? `${contract.reduction} MAD`
+      //       : undefined,
+      // },
       {
         key: "reste",
         property: "Montant Restant",
@@ -1224,7 +1243,7 @@ const TableContract = ({ darkmode }) => {
                             ) : (
                                 ""
                             )} */}
-              {true && selectedRowKeys.length >= 1 ? (
+              {true && selectedRowKeys.length == 1 ? (
                 <PrinterOutlined onClick={handlePrint} disabled={true} />
               ) : (
                 ""

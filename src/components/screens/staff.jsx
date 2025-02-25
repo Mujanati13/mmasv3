@@ -463,13 +463,14 @@ const TableStaff = ({ darkmode }) => {
 
   // Row selection object indicates the need for row selection
   const rowSelection = {
+    type: 'radio', // Change from default checkbox to radio
     selectedRowKeys,
     onChange: (selectedRowKeys) => {
       setSelectedRowKeys(selectedRowKeys);
       console.log("selectedRowKeys changed: ", selectedRowKeys);
     },
     getCheckboxProps: (record) => ({
-      disabled: record.name === "Disabled User", // Disable checkbox for specific rows
+      disabled: record.name === "Disabled User",
     }),
   };
 

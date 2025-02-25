@@ -483,7 +483,6 @@ const TablePeriod = () => {
         className="w-full mt-5"
         columns={columns}
         dataSource={filteredData}
-        rowSelection={rowSelection}
       />
       <Modal
         title="Edit Coach"
