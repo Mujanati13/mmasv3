@@ -44,7 +44,7 @@ export default function Login() {
         setIsloading(true);
 
         try {
-            const response = await fetch(Endpoint() + "/api/loginAdmin2/", {
+            const response = await fetch(Endpoint() + "/api/loginStaff/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

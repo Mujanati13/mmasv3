@@ -70,6 +70,9 @@ const TableContract = ({ darkmode }) => {
   const [transactions, setTransactions] = useState([]);
   const [students, setStudents] = useState([]);
   const [add, setAdd] = useState(false);
+  const [niveaux, setNiveaux] = useState([]);
+  const [selectedNiveau, setSelectedNiveau] = useState(null);
+  const [classes, setClasses] = useState([]);
 
   const [ContractData, setContractData] = useState({
     id_etd: "",
@@ -87,6 +90,44 @@ const TableContract = ({ darkmode }) => {
     montant: null,
     id_admin: JSON.parse(localStorage.getItem("data"))[0].id_admin,
   });
+
+  const fetchNiveaux = async () => {
+    try {
+      const response = await fetch(Endpoint() + "/api/niveau/", {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      const data = await response.json();
+      setNiveaux(data.data);
+    } catch (error) {
+      console.error("Error fetching niveaux:", error);
+    }
+  };
+  const fetchClasses = async () => {
+    try {
+      const response = await fetch(Endpoint() + "/api/classe/", {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      const data = await response.json();
+      setClasses(data.data);
+    } catch (error) {
+      console.error("Error fetching classes:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+    fetchClients();
+    fetchAbonnements();
+    fetchNiveaux();
+    fetchClasses(); // Add this line
+    const adminData = JSON.parse(localStorage.getItem("data"));
+    const initialAdminId = adminData ? adminData[0].id_admin : "";
+    ContractData.id_admin = initialAdminId;
+  }, []);
 
   const handleAddTransaction = () => {
     const newTransaction = {
@@ -485,6 +526,30 @@ const TableContract = ({ darkmode }) => {
             />
           </div> */}
           <div>
+            <label htmlFor="niveau">Niveau</label>
+            <Select
+              id="niveau"
+              showSearch
+              className="w-full"
+              placeholder="Sélectionner un niveau"
+              value={selectedNiveau}
+              onChange={(value) => {
+                setSelectedNiveau(value);
+                setContractData({ ...ContractData, id_etd: null }); // Reset student selection
+              }}
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                (option?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+              options={niveaux.map((niveau) => ({
+                value: niveau.id_niveau,
+                label: niveau.niveau,
+              }))}
+            />
+          </div>
+          <div>
             <label htmlFor="client">Etudiants</label>
             <Select
               id="client"
@@ -497,17 +562,32 @@ const TableContract = ({ darkmode }) => {
               placeholder="Etudiants"
               optionFilterProp="children"
               filterOption={(input, option) =>
-                (option?.label ?? "").startsWith(input)
-              }
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "")
+                (option?.label ?? "")
                   .toLowerCase()
-                  .localeCompare((optionB?.label ?? "").toLowerCase())
+                  .includes(input.toLowerCase())
               }
-              options={students.map((student) => ({
-                value: student.id_etudiant,
-                label: `${student.nom} ${student.prenom}`,
-              }))}
+              options={students
+                .filter((student) => {
+                  if (!selectedNiveau) return true;
+
+                  // Find the classes for the selected niveau
+                  const niveauClasses = classes.filter(
+                    (classe) => classe.id_niveau === selectedNiveau
+                  );
+                  console.log(niveauClasses)
+
+                  // Check if student's class is in the filtered classes
+                  return niveauClasses.some(
+                    (classe) => classe.id_classe === student.id_classe
+                  );
+                })
+
+                .map((student) => ({
+                  value: student.id_etudiant,
+                  label: `${student.nom} ${student.prenom}`,
+                }))}
+                
+              disabled={!selectedNiveau}
             />
           </div>
           <div>

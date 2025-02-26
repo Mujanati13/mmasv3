@@ -52,6 +52,7 @@ import TableSalle from "../components/screens/salle";
 import TableCours from "../components/screens/cours";
 import TableTransication from "../components/screens/transactions";
 import TableReservationCoachs from "../components/screens/presense";
+import Quiz from "../components/screens/quiz";
 
 const { Header, Sider, Content } = Layout;
 const { Title } = Typography;
@@ -247,6 +248,11 @@ const Dashboard = () => {
           adminPlanificationMenu,
           studentManagementMenu,
           personnelMenuItem,
+          {
+            key: "interface_quiz",
+            icon: <FileTextOutlined />,
+            label: "QUIZ",
+          },
         ]
       : userRole === "Prof"
       ? [
@@ -309,6 +315,8 @@ const Dashboard = () => {
         return <TablePayemnt darkmode={isDarkMode} />;
       case "Contrat_Salarier":
         return <TableContractStaff darkmode={isDarkMode} />;
+      case "interface_quiz":
+        return <Quiz darkmode={isDarkMode} />;
       default:
         return (
           <Card title="Welcome" bordered={false}>
