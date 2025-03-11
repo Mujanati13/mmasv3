@@ -5,13 +5,13 @@ export default defineConfig({
   base: "/",
   plugins: [react()],
   preview: {
-    port: 3001,        // Set preview port to 3001
-    strictPort: true,  // Ensure Vite uses port 3001 only
+    port: 3002,        // Set preview port to 3000
+    strictPort: true,  // Ensure Vite uses port 3000 only
   },
   server: {
-    port: 3001,        // Set development server port to 3001
+    port: 3002,        // Set development server port to 3000
     strictPort: true,  // Prevent fallback to another port
     host: true,        // Allows access from external IPs
-    origin: "http://0.0.0.0:3001", // Public URL origin
+    origin: "http://0.0.0.0:3002", // Public URL origin
   },
 });
