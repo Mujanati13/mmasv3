@@ -1,219 +1,139 @@
 import React, { useState, useEffect } from "react";
-import {
-  Form,
-  Input,
-  Button,
-  Checkbox,
-  Card,
-  Typography,
-  Space,
-  Divider,
-  Radio,
-  message,
-} from "antd";
-import { UserOutlined, LockOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
-import { isClientLoggedIn, isEsnLoggedIn } from "../helper/db";
-import { Endponit } from "../helper/enpoint";
+import { UserOutlined, KeyOutlined } from "@ant-design/icons";
+import { Button, Input, message } from "antd";
+import { Endpoint } from "../utils/endpoint";
+import { Link, useNavigate } from "react-router-dom";
+import logo from "../../src/assets/logo.png"
 
-const { Title, Text, Link } = Typography;
+export default function Login() {
+    const navigate = useNavigate();
+    const [isLoading, setIsloading] = useState(false);
+    const [getPassword, setPassword] = useState("");
+    const [emailError, setEmailError] = useState(false);
+    const [passwordError, setPasswordError] = useState(false);
+    const [loginError, setLoginError] = useState(null); // Track login error message
+    const [userType, setUserType] = useState("admin"); // Track user type (admin or coach)
+    const [getEmail, setEmail] = useState(
+        localStorage.getItem(`${userType}email`) || ""
+    );
 
-const LoginPage = () => {
-  const [loading, setLoading] = useState(false);
-  const [userType, setUserType] = useState("client");
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    {
-      const auth = isEsnLoggedIn();
-      const auth2 = isClientLoggedIn();
-      if (auth == true) {
-        navigate("/interface-en");
-      } else if (auth2 == true) {
-        navigate("/interface-cl");
-      }
+    function handleEmail(e) {
+        setEmail(e.target.value);
+        setEmailError(false); // Reset error state
+        setLoginError(null); // Reset login error message
     }
-  }, []);
 
-  const handleLogin = async (values) => {
-    setLoading(true);
+    function handlePassword(e) {
+        setPassword(e.target.value);
+        setPasswordError(false); // Reset error state
+        setLoginError(null); // Reset login error message
+    }
 
-    try {
-      const endpoint =
-        userType === "client"
-          ? Endponit() + "/api/login_client/"
-          : Endponit() + "/api/login_esn/";
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: values.username,
-          password: values.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success === true) {
-        message.success("Connexion réussie!");
-
-        // Store user data based on user type
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userType", userType);
-
-        if (userType === "client") {
-          localStorage.setItem("id", data.data[0].ID_clt);
-          navigate("/interface-cl");
-        } else {
-          // For ESN users
-          localStorage.setItem("id", data.data[0].ID_ESN);
-          // localStorage.setItem("esnName", data.data[0].Nom_ESN);
-          // localStorage.setItem("siret", data.data[0].SIRET);
-          navigate("/interface-en"); // Adjust this route as needed
+    async function handleLogin() {
+        if (!getEmail || !getPassword) {
+            if (!getEmail) {
+                setEmailError(true); // Set error state for email
+            }
+            if (!getPassword) {
+                setPasswordError(true); // Set error state for password
+            }
+            message.warning("Please fill in all required fields.");
+            return;
         }
-      } else {
-        message.error(data.message || "Identifiants invalides");
-      }
-    } catch (error) {
-      message.error("Erreur de connexion au serveur");
-    } finally {
-      setLoading(false);
+
+        setIsloading(true);
+
+        try {
+            const response = await fetch(Endpoint() + "/api/loginStaff/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username: getEmail, password: getPassword }),
+            });
+
+            if (response.ok) {
+                const { token, data } = await response.json();
+                if (data) {
+                    localStorage.setItem("jwtToken", token);
+                    localStorage.setItem(`${userType}email`, getEmail);
+                    localStorage.setItem("data", JSON.stringify(data));
+                    navigate("/dashboard");
+                } else {
+                    message.error("Login failed. Please check your credentials.");
+                }
+            } else {
+                message.error("Login failed. Please check your credentials.");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            message.error("An error occurred during login.");
+        } finally {
+            setIsloading(false);
+        }
     }
-  };
 
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
-      }}
-    >
-      <Card
-        style={{
-          maxWidth: "400px",
-          width: "100%",
-          boxShadow:
-            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <Title level={2} style={{ marginBottom: "8px" }}>
-            Bienvenue
-          </Title>
-          <Text type="secondary">Connectez-vous à votre compte</Text>
-        </div>
+    useEffect(() => {
+        const email = localStorage.getItem(`${userType}email`);
+        setEmail(email || "");
+    }, [userType]);
 
-        <div style={{ marginBottom: "24px" }}>
-          <Radio.Group
-            value={userType}
-            onChange={(e) => setUserType(e.target.value)}
-            buttonStyle="solid"
-            style={{ width: "100%" }}
-          >
-            <Radio.Button
-              value="client"
-              style={{ width: "50%", textAlign: "center" }}
-            >
-              Client final
-            </Radio.Button>
-            <Radio.Button
-              value="societe"
-              style={{ width: "50%", textAlign: "center" }}
-            >
-              Prestataire de service
-            </Radio.Button>
-          </Radio.Group>
-        </div>
-
-        <Form
-          name="login"
-          initialValues={{ remember: true }}
-          onFinish={handleLogin}
-          size="large"
-          layout="vertical"
-        >
-          <Form.Item
-            name="username"
-            rules={[
-              { required: true, message: "Veuillez saisir votre Email!" },
-            ]}
-          >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder={
-                userType === "client" ? "Adresse email" : "Adresse email"
-              }
-              // maxLength={userType === "client" ? undefined : 14}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="password"
-            rules={[
-              {
-                required: true,
-                message: "Veuillez saisir votre mot de passe!",
-              },
-            ]}
-          >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Mot de passe"
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Space style={{ width: "100%" }} justify="space-between">
-              <Checkbox name="remember">Se souvenir de moi</Checkbox>
-              <Link>Mot de passe oublié ?</Link>
-            </Space>
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              block
-              style={{
-                height: "40px",
-                borderRadius: "6px",
-                background: "#1890ff",
-              }}
-            >
-              Se connecter
-            </Button>
-          </Form.Item>
-
-          <Divider plain>
-            <Text type="secondary">OU</Text>
-          </Divider>
-
-          <Space direction="vertical" style={{ width: "100%" }} size="middle">
-            <div style={{ textAlign: "center" }}>
-              <Text type="secondary">
-                Vous n'avez pas de compte ?{" "}
-                <Link
-                  onClick={() => {
-                    navigate("/regester");
-                  }}
-                >
-                  S'inscrire
-                </Link>
-              </Text>
+    return (
+        <div className="w-full h-screen">
+            <div className="flex justify-center mt-10">
+                <div className="bg-white rounded-md">
+                    <img
+                        height={100}
+                        width={100}
+                        src={"../../src/assets/logo.png"}
+                    />
+                </div>
             </div>
-          </Space>
-        </Form>
-      </Card>
-    </div>
-  );
-};
+            <div className="w-80 h-60 m-auto mt-1 flex flex-col justify-center items-center space-y-5">
+                <Input
+                    style={
+                        (emailError || loginError) && !getEmail
+                            ? { borderColor: "red" }
+                            : null
+                    }
+                    required
+                    onChange={handleEmail}
+                    onBlur={(e) => {
+                        if (e.target.value.length === 1) {
+                            setEmail(""); // Set getEmail state to empty when the field is cleared
+                        }
+                    }}
+                    size="large"
+                    value={getEmail}
+                    placeholder="Email"
+                    prefix={<UserOutlined />}
+                />
 
-export default LoginPage;
+                <Input.Password
+                    style={passwordError || loginError ? { borderColor: "red" } : null}
+                    required
+                    onChange={handlePassword}
+                    size="large"
+                    type="password"
+                    placeholder="Password"
+                    prefix={<KeyOutlined />}
+                />
+                {isLoading ? (
+                    <Button className="w-80" loading>
+                        Se connecter
+                    </Button>
+                ) : (
+                    <Button className="font-medium w-80" onClick={handleLogin}>
+                        Se connecter
+                    </Button>
+                )}
+                {loginError && <div className="text-red-500">{loginError}</div>}
+            </div>
+            <Link to="/forget-password">
+                <div className="text-blue-400 underline underline-offset-1 text-center">
+                    Mot de passe oublié?{" "}
+                </div>
+            </Link>
+        </div>
+    );
+}

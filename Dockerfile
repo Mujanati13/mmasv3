@@ -1,8 +1,8 @@
 # Use an official Node.js runtime as a parent image
-FROM node:19.5.0-alpine
+FROM node:20
 
 # Set the Node.js memory limit
-ENV NODE_OPTIONS=--max-old-space-size=1106
+ENV NODE_OPTIONS=--max-old-space-size=1906
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -20,7 +20,9 @@ COPY . .
 RUN npm run build
 
 # Expose the port your app runs on
-EXPOSE 3002
+EXPOSE 3001
 
 # Start your application
 CMD ["npm", "start"]
+
+
